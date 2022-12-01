@@ -1,11 +1,30 @@
 const express = require('express')
 const handlebars = require('express-handlebars')
+const { Server: HttpServer} = require('http')
+const { Server: IOServer } = require('socket.io')
 
 const app = express()
+const httpServer = HttpServer(app)
+const io = new IOServer(httpServer)
+
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 app.use(express.static('/public'))
+
+const mensajes = [{email:'asdasd', text:'asdasdSS'}]
+
+io.on('connection', socket =>{
+    console.log('Usuario conectado');
+
+    socket.emit('messages', mensajes)
+
+    socket.on('new-message', data =>{
+      mensajes.push(data)
+
+      io.sockets.emit('messages', mensajes)
+    })
+})
 
 app.engine('handlebars', handlebars.engine())
 
@@ -34,6 +53,8 @@ const productos = [
 ]
 
 
+
+
 app.get('/productos', (req, res) => {
   let listaProductos = false;
 
@@ -51,8 +72,8 @@ app.post('/productos', (req, res) => {
 })
 
 
+const PORT = 8080
 
-
-const server = app.listen(8080, () => {
+httpServer.listen(PORT, () => {
   console.log("Escuchando en 8080");
 })
